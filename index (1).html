@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareBase - Healthcare Database</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eaf3f5;
+      color: #12303a;
+      padding-bottom: 70px;
+    }
+
+    header {
+      background: #0e7c86;
+      color: #ffffff;
+      padding: 16px;
+    }
+
+    header h1 { margin: 0; font-size: 22px; }
+    header p { margin: 4px 0 0; font-size: 14px; }
+
+    #view { padding: 16px; max-width: 700px; margin: 0 auto; }
+
+    h2 { font-size: 18px; margin: 18px 0 10px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .box {
+      background: #ffffff;
+      border: 1px solid #d3e3e7;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .box b { display: block; font-size: 20px; }
+    .box span { font-size: 13px; color: #5b747c; }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #d3e3e7;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card small { display: block; color: #5b747c; margin-top: 2px; }
+
+    .tag {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: #d9f0f2;
+      color: #095a62;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .tag.warn { background: #fdf0d8; color: #8a5300; }
+    .tag.bad { background: #fbe6e4; color: #b3261e; }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #c5d8dd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    label { font-size: 13px; color: #5b747c; }
+
+    button.main {
+      width: 100%;
+      padding: 12px;
+      background: #0e7c86;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .formbox {
+      background: #ffffff;
+      border: 1px solid #d3e3e7;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .error { color: #b3261e; font-size: 14px; margin-bottom: 8px; }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: #ffffff;
+      border-top: 1px solid #d3e3e7;
+    }
+
+    nav button {
+      flex: 1;
+      padding: 16px 0;
+      border: none;
+      background: none;
+      font-size: 13px;
+      color: #5b747c;
+    }
+
+    nav button.active { color: #0e7c86; font-weight: bold; border-top: 3px solid #0e7c86; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>CareBase</h1>
+    <p>Healthcare database management system</p>
+  </header>
+
+  <div id="view"></div>
+
+  <nav>
+    <button onclick="go(0)" id="n0">Home</button>
+    <button onclick="go(1)" id="n1">Patients</button>
+    <button onclick="go(2)" id="n2">Visits</button>
+    <button onclick="go(3)" id="n3">Pharmacy</button>
+    <button onclick="go(4)" id="n4">Billing</button>
+  </nav>
+
+  <script>
+    // ---------- DATA ----------
+    var doctors = [
+      { id: 1, name: "Dr. Amina Bello", area: "General Medicine" },
+      { id: 2, name: "Dr. Chidi Okafor", area: "Paediatrics" },
+      { id: 3, name: "Dr. Funke Adeyemi", area: "Obstetrics" },
+      { id: 4, name: "Dr. Musa Ibrahim", area: "Surgery" }
+    ];
+
+    var patients = [
+      { id: "P001", name: "Ngozi Eze", sex: "F", dob: "1988-04-12", blood: "O+", condition: "Malaria" },
+      { id: "P002", name: "Tunde Alabi", sex: "M", dob: "1975-09-03", blood: "A+", condition: "Hypertension" },
+      { id: "P003", name: "Aisha Yusuf", sex: "F", dob: "2019-01-22", blood: "B+", condition: "Cough and fever" },
+      { id: "P004", name: "Emeka Obi", sex: "M", dob: "1992-11-30", blood: "O-", condition: "Fracture, left arm" },
+      { id: "P005", name: "Bisi Ajayi", sex: "F", dob: "1996-06-18", blood: "AB+", condition: "Antenatal care" },
+      { id: "P006", name: "Ibrahim Sani", sex: "M", dob: "1960-02-08", blood: "A-", condition: "Diabetes" },
+      { id: "P007", name: "Chiamaka Nwosu", sex: "F", dob: "2015-08-14", blood: "O+", condition: "Typhoid" },
+      { id: "P008", name: "Yemi Adebayo", sex: "M", dob: "1984-12-25", blood: "B-", condition: "Back pain" },
+      { id: "P009", name: "Halima Musa", sex: "F", dob: "1979-05-05", blood: "A+", condition: "Hypertension" },
+      { id: "P010", name: "Sola Oladipo", sex: "M", dob: "2001-03-17", blood: "O+", condition: "Appendicitis" }
+    ];
+
+    var visits = [
+      { pid: "P001", doc: 1, date: "2026-09-28", status: "Completed" },
+      { pid: "P002", doc: 1, date: "2026-09-29", status: "Completed" },
+      { pid: "P003", doc: 2, date: "2026-09-30", status: "Completed" },
+      { pid: "P004", doc: 4, date: "2026-10-01", status: "Completed" },
+      { pid: "P005", doc: 3, date: "2026-10-05", status: "Scheduled" },
+      { pid: "P006", doc: 1, date: "2026-10-06", status: "Scheduled" },
+      { pid: "P007", doc: 2, date: "2026-10-06", status: "Scheduled" },
+      { pid: "P008", doc: 1, date: "2026-10-07", status: "Cancelled" }
+    ];
+
+    var drugs = [
+      { name: "Paracetamol 500mg", qty: 1200, price: 15 },
+      { name: "Amoxicillin 500mg", qty: 340, price: 60 },
+      { name: "Artemether-Lumefantrine", qty: 85, price: 450 },
+      { name: "Metformin 500mg", qty: 600, price: 25 },
+      { name: "Amlodipine 5mg", qty: 95, price: 40 },
+      { name: "ORS sachets", qty: 260, price: 50 }
+    ];
+
+    var bills = [
+      { pid: "P001", amount: 7500, status: "Paid" },
+      { pid: "P002", amount: 12000, status: "Paid" },
+      { pid: "P003", amount: 6000, status: "Paid" },
+      { pid: "P004", amount: 85000, status: "Unpaid" },
+      { pid: "P010", amount: 240000, status: "Unpaid" }
+    ];
+
+    var currentTab = 0;
+    var searchText = "";
+
+    // ---------- HELPERS ----------
+    function money(n) {
+      return "NGN " + n.toLocaleString();
+    }
+
+    function patientName(id) {
+      for (var i = 0; i < patients.length; i++) {
+        if (patients[i].id === id) return patients[i].name;
+      }
+      return id;
+    }
+
+    function doctorName(id) {
+      for (var i = 0; i < doctors.length; i++) {
+        if (doctors[i].id === id) return doctors[i].name + " (" + doctors[i].area + ")";
+      }
+      return "";
+    }
+
+    function getAge(dob) {
+      var born = new Date(dob);
+      var now = new Date();
+      var years = now.getFullYear() - born.getFullYear();
+      var m = now.getMonth() - born.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < born.getDate())) years--;
+      return years + " yrs";
+    }
+
+    function sum(list, field) {
+      var total = 0;
+      for (var i = 0; i < list.length; i++) total += list[i][field];
+      return total;
+    }
+
+    function clean(text) {
+      return String(text).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // ---------- SCREENS ----------
+    function showHome() {
+      var upcoming = 0;
+      for (var i = 0; i < visits.length; i++) {
+        if (visits[i].status === "Scheduled") upcoming++;
+      }
+
+      var lowDrugs = 0;
+      for (var j = 0; j < drugs.length; j++) {
+        if (drugs[j].qty < 100) lowDrugs++;
+      }
+
+      var paid = 0;
+      var owed = 0;
+      for (var k = 0; k < bills.length; k++) {
+        if (bills[k].status === "Paid") paid += bills[k].amount;
+        else owed += bills[k].amount;
+      }
+
+      return "<h2>Overview</h2>" +
+        "<div class='grid'>" +
+          "<div class='box'><b>" + patients.length + "</b><span>Patients</span></div>" +
+          "<div class='box'><b>" + upcoming + "</b><span>Upcoming visits</span></div>" +
+          "<div class='box'><b>" + lowDrugs + "</b><span>Drugs running low</span></div>" +
+          "<div class='box'><b>" + doctors.length + "</b><span>Doctors</span></div>" +
+        "</div>" +
+        "<h2>Billing</h2>" +
+        "<div class='grid'>" +
+          "<div class='box'><b>" + money(paid) + "</b><span>Collected</span></div>" +
+          "<div class='box'><b>" + money(owed) + "</b><span>Outstanding</span></div>" +
+        "</div>";
+    }
+
+    function showPatients() {
+      var html = "<h2>Add a patient</h2>" +
+        "<div class='formbox'>" +
+          "<label>Full name</label><input id='pName' placeholder='e.g. Ada Obi'>" +
+          "<label>Sex</label><select id='pSex'><option value='F'>Female</option><option value='M'>Male</option></select>" +
+          "<label>Birth date</label><input id='pDob' type='date'>" +
+          "<label>Blood group</label><select id='pBlood'><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select>" +
+          "<label>Condition</label><input id='pCond' placeholder='e.g. Malaria'>" +
+          "<div class='error' id='pErr'></div>" +
+          "<button class='main' onclick='addPatient()'>Save patient</button>" +
+        "</div>" +
+        "<h2>All patients</h2>" +
+        "<input id='search' placeholder='Search by name or condition' value='" + clean(searchText) + "' oninput='doSearch()'>";
+
+      var shown = 0;
+      for (var i = 0; i < patients.length; i++) {
+        var p = patients[i];
+        var text = (p.name + " " + p.condition + " " + p.id).toLowerCase();
+        if (text.indexOf(searchText.toLowerCase()) === -1) continue;
+        shown++;
+        html += "<div class='card'><div><b>" + clean(p.name) + "</b>" +
+          "<small>" + p.id + " | " + getAge(p.dob) + " | " + clean(p.condition) + "</small></div>" +
+          "<span class='tag'>" + p.blood + "</span></div>";
+      }
+
+      if (shown === 0) html += "<p>No patients found.</p>";
+      return html;
+    }
+
+    function showVisits() {
+      var patientOptions = "";
+      for (var i = 0; i < patients.length; i++) {
+        patientOptions += "<option value='" + patients[i].id + "'>" + clean(patients[i].name) + "</option>";
+      }
+
+      var doctorOptions = "";
+      for (var j = 0; j < doctors.length; j++) {
+        doctorOptions += "<option value='" + doctors[j].id + "'>" + doctors[j].name + "</option>";
+      }
+
+      var html = "<h2>Book a visit</h2>" +
+        "<div class='formbox'>" +
+          "<label>Patient</label><select id='vPatient'>" + patientOptions + "</select>" +
+          "<label>Doctor</label><select id='vDoctor'>" + doctorOptions + "</select>" +
+          "<label>Date</label><input id='vDate' type='date'>" +
+          "<div class='error' id='vErr'></div>" +
+          "<button class='main' onclick='addVisit()'>Book visit</button>" +
+        "</div>" +
+        "<h2>All visits</h2>";
+
+      for (var k = visits.length - 1; k >= 0; k--) {
+        var v = visits[k];
+        var cls = v.status === "Scheduled" ? "warn" : (v.status === "Cancelled" ? "bad" : "");
+        html += "<div class='card'><div><b>" + clean(patientName(v.pid)) + "</b>" +
+          "<small>" + v.date + " | " + doctorName(v.doc) + "</small></div>" +
+          "<span class='tag " + cls + "'>" + v.status + "</span></div>";
+      }
+      return html;
+    }
+
+    function showPharmacy() {
+      var html = "<h2>Pharmacy stock</h2><p>Drugs under 100 units are marked low.</p>";
+      for (var i = 0; i < drugs.length; i++) {
+        var d = drugs[i];
+        var low = d.qty < 100;
+        html += "<div class='card'><div><b>" + d.name + "</b>" +
+          "<small>" + d.qty + " units left | NGN " + d.price + " each</small></div>" +
+          (low ? "<span class='tag bad'>Low</span>" : "<span class='tag'>OK</span>") + "</div>";
+      }
+      return html;
+    }
+
+    function showBilling() {
+      var html = "<h2>Billing</h2>";
+      for (var i = 0; i < bills.length; i++) {
+        var b = bills[i];
+        html += "<div class='card'><div><b>" + clean(patientName(b.pid)) + "</b>" +
+          "<small>" + b.pid + " | " + b.status + "</small></div>" +
+          "<span class='tag " + (b.status === "Unpaid" ? "bad" : "") + "'>" + money(b.amount) + "</span></div>";
+      }
+      html += "<p><b>Total billed: " + money(sum(bills, "amount")) + "</b></p>";
+      return html;
+    }
+
+    // ---------- ACTIONS ----------
+    function addPatient() {
+      var name = document.getElementById("pName").value.trim();
+      var dob = document.getElementById("pDob").value;
+      var err = document.getElementById("pErr");
+
+      if (name === "") { err.innerHTML = "Enter the patient's full name."; return; }
+      if (dob === "") { err.innerHTML = "Pick a birth date."; return; }
+
+      var number = patients.length + 1;
+      var id = "P" + (number < 10 ? "00" : number < 100 ? "0" : "") + number;
+      var cond = document.getElementById("pCond").value.trim();
+
+      patients.push({
+        id: id,
+        name: name,
+        sex: document.getElementById("pSex").value,
+        dob: dob,
+        blood: document.getElementById("pBlood").value,
+        condition: cond === "" ? "General check-up" : cond
+      });
+
+      searchText = "";
+      draw();
+    }
+
+    function addVisit() {
+      var date = document.getElementById("vDate").value;
+      var err = document.getElementById("vErr");
+
+      if (date === "") { err.innerHTML = "Pick a visit date."; return; }
+
+      visits.push({
+        pid: document.getElementById("vPatient").value,
+        doc: parseInt(document.getElementById("vDoctor").value, 10),
+        date: date,
+        status: "Scheduled"
+      });
+
+      draw();
+    }
+
+    function doSearch() {
+      var box = document.getElementById("search");
+      searchText = box.value;
+      var pos = box.selectionStart;
+      draw();
+      var again = document.getElementById("search");
+      again.focus();
+      again.setSelectionRange(pos, pos);
+    }
+
+    // ---------- SCREEN SWITCHING ----------
+    function draw() {
+      var screens = [showHome, showPatients, showVisits, showPharmacy, showBilling];
+      document.getElementById("view").innerHTML = screens[currentTab]();
+
+      for (var i = 0; i < 5; i++) {
+        document.getElementById("n" + i).className = (i === currentTab) ? "active" : "";
+      }
+    }
+
+    function go(n) {
+      currentTab = n;
+      window.scrollTo(0, 0);
+      draw();
+    }
+
+    draw();
+  </script>
+</body>
+</html>
